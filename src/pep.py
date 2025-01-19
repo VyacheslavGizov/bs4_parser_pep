@@ -47,19 +47,19 @@ def find_statuses_and_links(session):
     ]
 
 
-def chesk_status(session, status, url):
+def chesk_status(session, prewiev_status, url):
     """Проверит статуc на странице PEP."""  # переименовать
 
     response = get_response(session, url)
     soup = BeautifulSoup(response.text, 'lxml')
 
-    pep_status = soup.find(string="Status").parent.find_next_sibling().string
-    expected = EXPECTED_STATUS[status]
-    if pep_status not in expected:
+    status = soup.find(string="Status").parent.find_next_sibling().string
+    expected = EXPECTED_STATUS[prewiev_status]
+    if status not in expected:
         print(STATUS_MISMATCH.format(
-            url=url, status=pep_status, expected=expected
+            url=url, status=status, expected=expected
         ))  # сообщение в логи
-    return pep_status
+    return status
 
 
 if __name__ == '__main__':
