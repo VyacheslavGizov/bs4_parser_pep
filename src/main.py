@@ -5,11 +5,15 @@ import re
 import requests_cache
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from prettytable import PrettyTable
 
 from configs import configure_argument_parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL
+from constants import BASE_DIR, MAIN_DOC_URL, PEP_URL, EXPECTED_STATUS
 from outputs import control_output
 from utils import get_response, find_tag
+
+
+STATUS_MISMATCH = ('{url}: статус в карточке - {status}, ожидалось {expected}')
 
 
 def whats_new(session):
@@ -39,7 +43,7 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    results = [('Ссылка на документацию', 'Версия', 'Статус')]'
+    results = [('Ссылка на документацию', 'Версия', 'Статус')]
     response = get_response(session, MAIN_DOC_URL)
     if response is None:
         return
@@ -90,10 +94,61 @@ def download(session):
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
 
 
+def find_statuses_and_links(session):
+    response = get_response(session, PEP_URL)
+    if response is None:
+        return
+    soup = BeautifulSoup(response.text, 'lxml')
+    return [
+        {
+            'status_preview': find_tag(row, tag='abbr').text[1:],
+            'link': find_tag(row, tag='a')['href']
+        }
+        for table in find_tag(
+            soup, tag='section', attrs={'id': 'index-by-category'}
+        ).find_all('tbody')
+        for row in table.find_all('tr')
+    ]
+
+
+def check_status(session, status_preview, url):
+    """Проверит статуc на странице PEP."""  # переименовать
+
+    response = get_response(session, url)
+    if response is None:
+        return
+    soup = BeautifulSoup(response.text, 'lxml')
+    status = soup.find(string="Status").parent.find_next_sibling().text
+    expected = EXPECTED_STATUS[status_preview]
+    if status in expected:
+        return status
+    logging.info(STATUS_MISMATCH.format(
+        url=url, status=status, expected=expected))
+
+
+def pep(session):
+    results = [('Статус', 'Количество')]
+    quantity_per_status = dict()
+    for result in tqdm(find_statuses_and_links(session)):
+        status = check_status(
+            session=session,
+            status_preview=result['status_preview'],
+            url=urljoin(PEP_URL, result['link'])
+        )
+        if status not in quantity_per_status:
+            quantity_per_status[status] = 0
+        quantity_per_status[status] += 1
+    quantity_per_status['Total'] = sum(quantity_per_status.values())
+    results.extend((key, str(value))
+                   for key, value in quantity_per_status.items())
+    return results
+
+
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
     'download': download,
+    'pep': pep
 }
 
 
@@ -112,7 +167,7 @@ def main():
     parser_mode = args.mode
 
     results = MODE_TO_FUNCTION[parser_mode](session)
-
+    print(results)
     if results is not None:
         control_output(results, args)
     logging.info('Парсер завершил работу.')
