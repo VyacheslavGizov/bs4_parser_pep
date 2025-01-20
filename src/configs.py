@@ -5,36 +5,43 @@ import logging
 from constants import BASE_DIR
 
 
-LOG_FORMAT = '"%(asctime)s - [%(levelname)s] - %(message)s"'
+LOG_FORMAT = ('%(asctime)s - %(name)s - [%(levelname)s] - '
+              '%(filename)s: %(funcName)s: %(lineno)s - %(message)s')
+LOG_DIR = BASE_DIR / 'logs'
+LOG_FILENAME = 'parser.log'
 DT_FORMAT = '%d.%m.%Y %H:%M:%S'
+
+DESCRIPTION = 'Парсер документации Python'
+CLEAR_HELP = 'Очистка кеша'
+OUTPUT_HELP = 'Дополнительные способы вывода данных'
+MODES_HELP = 'Режимы работы парсера'
 
 
 def configure_argument_parser(available_modes):
-    parser = argparse.ArgumentParser(description='Парсер документации Python')
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
         'mode',
         choices=available_modes,
-        help='Режимы работы парсера'
+        help=MODES_HELP
     )
     parser.add_argument(
         '-c',
         '--clear-cache',
         action='store_true',
-        help='Очистка кеша'
+        help=CLEAR_HELP
     )
     parser.add_argument(
         '-o',
         '--output',
         choices=('pretty', 'file'),
-        help='Дополнительные способы вывода данных'
+        help=OUTPUT_HELP
     )
     return parser
 
 
-def configure_logging():
-    log_dir = BASE_DIR / 'logs'  # можно вынести в константу и передавать как значение по умолчанию, чтобы можно было менять
+def configure_logging(log_dir=LOG_DIR, log_filename=LOG_FILENAME):
     log_dir.mkdir(exist_ok=True)
-    log_file = log_dir / 'parser.log'
+    log_file = log_dir / log_filename
     rotating_handler = RotatingFileHandler(
         log_file, maxBytes=10 ** 6, backupCount=5, encoding='utf-8'
     )

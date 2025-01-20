@@ -1,9 +1,12 @@
 from pathlib import Path
 
-MAIN_DOC_URL = 'https://docs.python.org/3/'
+
 BASE_DIR = Path(__file__).parent
-DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
+
+MAIN_DOC_URL = 'https://docs.python.org/3/'
 PEP_URL = 'https://peps.python.org/'
+
+DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 
 EXPECTED_STATUS = {
     'A': ('Active', 'Accepted'),
@@ -15,3 +18,7 @@ EXPECTED_STATUS = {
     'W': ('Withdrawn',),
     '': ('Draft', 'Active'),
 }
+
+WHATS_NEW_HEADLINES = ('Ссылка на статью', 'Заголовок', 'Редактор, автор')
+LATEST_VERSIONS_HEADLINES = ('Ссылка на документацию', 'Версия', 'Статус')
+PEP_HEADLINES = ('Статус', 'Количество')
