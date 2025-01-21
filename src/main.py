@@ -96,7 +96,7 @@ def download(session):
     archive_url = urljoin(
         downloads_url,
         find_tag(soup, 'div', {'role': 'main'}).select_one(
-            'table.docutils td > [href$=\'pdf-a4\.zip\']')['href'])
+            'table.docutils td > [href$=\'pdf-a4.zip\']')['href'])
     downloads_dir = DOWNLOADS_DIR
     downloads_dir.mkdir(exist_ok=True)
     archive_path = downloads_dir / archive_url.split('/')[-1]
