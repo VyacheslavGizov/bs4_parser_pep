@@ -2,13 +2,11 @@ from logging.handlers import RotatingFileHandler
 import argparse
 import logging
 
-from constants import BASE_DIR
+from constants import FILE_MODE, LOG_DIR, LOG_FILENAME, PRETTY_MODE
 
 
 LOG_FORMAT = ('%(asctime)s - %(name)s - [%(levelname)s] - '
               '%(filename)s: %(funcName)s: %(lineno)s - %(message)s')
-LOG_DIR = BASE_DIR / 'logs'
-LOG_FILENAME = 'parser.log'
 DT_FORMAT = '%d.%m.%Y %H:%M:%S'
 
 DESCRIPTION = 'Парсер документации Python'
@@ -33,7 +31,7 @@ def configure_argument_parser(available_modes):
     parser.add_argument(
         '-o',
         '--output',
-        choices=('pretty', 'file'),
+        choices=(PRETTY_MODE, FILE_MODE),
         help=OUTPUT_HELP
     )
     return parser

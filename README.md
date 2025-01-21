@@ -9,10 +9,11 @@
 ## Как запустить проект локально:
 1. Клонировать репозиторий:
 ```
-git clone https://...
+git clone https://github.com/VyacheslavGizov/bs4_parser_pep.git
 ```
 2. В корневой папке создать и активировать виртуальное окружение, установить зависимости:
 ```
+cd bs4_parser_pep/
 python -m venv venv
 source venv/Scripts/activate
 pip install -r requirements.txt

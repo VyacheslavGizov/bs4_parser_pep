@@ -1,10 +1,19 @@
 from pathlib import Path
 
-
-BASE_DIR = Path(__file__).parent
-
+# Ссылки
 MAIN_DOC_URL = 'https://docs.python.org/3/'
 PEP_URL = 'https://peps.python.org/'
+
+# Директории и файлы
+BASE_DIR = Path(__file__).parent
+DOWNLOADS_DIR = BASE_DIR / 'downloads'
+RESULTS_DIR = BASE_DIR / 'results'
+LOG_DIR = BASE_DIR / 'logs'
+LOG_FILENAME = 'parser.log'
+
+# Режимы вывода данных
+PRETTY_MODE = 'pretty'
+FILE_MODE = 'file'
 
 DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 
@@ -18,7 +27,3 @@ EXPECTED_STATUS = {
     'W': ('Withdrawn',),
     '': ('Draft', 'Active'),
 }
-
-WHATS_NEW_HEADLINES = ('Ссылка на статью', 'Заголовок', 'Редактор, автор')
-LATEST_VERSIONS_HEADLINES = ('Ссылка на документацию', 'Версия', 'Статус')
-PEP_HEADLINES = ('Статус', 'Количество')

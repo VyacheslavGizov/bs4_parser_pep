@@ -1,8 +1,6 @@
-from http import HTTPStatus
-
 from requests import RequestException
 
-from exceptions import ParserFindTagException, UnsuccessfulResponseError
+from exceptions import ParserFindTagException
 
 
 REQUEST_ERROR = ('Сбой сети! При выполнении GET-запроса на {url} возникла '
@@ -14,23 +12,19 @@ UNSUCCESSFUL_RESPONSE = (
 TAG_NOT_FOUND = 'Не найден тег {tag} {attrs}'
 
 
-def get_response(session, url):
+def get_response(session, url, encoding='utf-8'):
     try:
         response = session.get(url)
     except RequestException as error:
         raise ConnectionError(
             REQUEST_ERROR.format(url=url, error=error)
         )
-    response_status = response.status_code
-    if response_status != HTTPStatus.OK:
-        raise UnsuccessfulResponseError(UNSUCCESSFUL_RESPONSE.format(
-            url=url, response_status=response_status))
-    response.encoding = 'utf-8'
+    response.encoding = encoding
     return response
 
 
 def find_tag(soup, tag, attrs=None):
-    searched_tag = soup.find(tag, attrs=(attrs or {}))
+    searched_tag = soup.find(tag, attrs=({} if attrs is None else attrs))
     if searched_tag is None:
         raise ParserFindTagException(TAG_NOT_FOUND.format(
             tag=tag, attrs=attrs))
