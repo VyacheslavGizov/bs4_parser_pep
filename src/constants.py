@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 # Ссылки
 MAIN_DOC_URL = 'https://docs.python.org/3/'
 PEP_URL = 'https://peps.python.org/'
@@ -14,7 +15,6 @@ LOG_FILENAME = 'parser.log'
 # Режимы вывода данных
 PRETTY_MODE = 'pretty'
 FILE_MODE = 'file'
-
 
 DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 

@@ -6,10 +6,6 @@ from exceptions import ParserFindTagException
 
 REQUEST_ERROR = ('Сбой сети! При выполнении GET-запроса на {url} возникла '
                  'ошибка: {error}.')
-UNSUCCESSFUL_RESPONSE = (
-    'Неожиданный статус ответа! При выполнении GET-запроса на {url} '
-    'получен ответ с кодом возврата: {response_status}. Ожидаемый код: 200.'
-)
 TAG_NOT_FOUND = 'Не найден тег {tag} {attrs}'
 
 
