@@ -2,7 +2,8 @@ from logging.handlers import RotatingFileHandler
 import argparse
 import logging
 
-from constants import FILE_MODE, LOG_DIR, LOG_FILENAME, PRETTY_MODE
+from constants import BASE_DIR, FILE_MODE, LOG_DIR, LOG_FILENAME, PRETTY_MODE
+from utils import make_nested_dir
 
 
 LOG_FORMAT = ('%(asctime)s - %(name)s - [%(levelname)s] - '
@@ -37,9 +38,8 @@ def configure_argument_parser(available_modes):
     return parser
 
 
-def configure_logging(log_dir=LOG_DIR, log_filename=LOG_FILENAME):
-    log_dir.mkdir(exist_ok=True)
-    log_file = log_dir / log_filename
+def configure_logging():
+    log_file = make_nested_dir(LOG_DIR, BASE_DIR) / LOG_FILENAME
     rotating_handler = RotatingFileHandler(
         log_file, maxBytes=10 ** 6, backupCount=5, encoding='utf-8'
     )

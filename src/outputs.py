@@ -4,7 +4,14 @@ import logging
 
 from prettytable import PrettyTable
 
-from constants import DATETIME_FORMAT, RESULTS_DIR, PRETTY_MODE, FILE_MODE
+from constants import (
+    BASE_DIR,
+    DATETIME_FORMAT,
+    RESULTS_DIR,
+    PRETTY_MODE,
+    FILE_MODE
+)
+from utils import make_nested_dir
 
 
 RESULT_FILENAME = '{parser_mode}_{timestamp}.csv'
@@ -27,8 +34,7 @@ def pretty_output(results, *args):
 
 
 def file_output(results, cli_args):
-    results_dir = RESULTS_DIR
-    results_dir.mkdir(exist_ok=True)
+    results_dir = make_nested_dir(RESULTS_DIR, BASE_DIR)
     file_path = results_dir / RESULT_FILENAME.format(
         parser_mode=cli_args.mode,
         timestamp=dt.datetime.now().strftime(DATETIME_FORMAT)

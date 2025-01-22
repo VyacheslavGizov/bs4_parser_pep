@@ -6,14 +6,15 @@ PEP_URL = 'https://peps.python.org/'
 
 # Директории и файлы
 BASE_DIR = Path(__file__).parent
-DOWNLOADS_DIR = BASE_DIR / 'downloads'
-RESULTS_DIR = BASE_DIR / 'results'
-LOG_DIR = BASE_DIR / 'logs'
+DOWNLOADS_DIR = 'downloads'
+RESULTS_DIR = 'results'
+LOG_DIR = 'logs'
 LOG_FILENAME = 'parser.log'
 
 # Режимы вывода данных
 PRETTY_MODE = 'pretty'
 FILE_MODE = 'file'
+
 
 DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 

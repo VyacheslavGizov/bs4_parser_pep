@@ -3,15 +3,20 @@ from urllib.parse import urljoin
 import logging
 import re
 
-from bs4 import BeautifulSoup
 from tqdm import tqdm
 import requests_cache
 
 from configs import configure_argument_parser, configure_logging
-from constants import DOWNLOADS_DIR, EXPECTED_STATUS, MAIN_DOC_URL, PEP_URL
+from constants import (
+    BASE_DIR,
+    DOWNLOADS_DIR,
+    EXPECTED_STATUS,
+    MAIN_DOC_URL,
+    PEP_URL
+)
 from exceptions import ParserNotFindException
 from outputs import control_output
-from utils import get_response, find_tag
+from utils import get_soup, find_tag, make_nested_dir
 
 
 # Сообщения исключений
@@ -26,7 +31,6 @@ PARSER_FINISHED = 'Парсер завершил работу.'
 SAVED_MESSAGE = 'Архив был загружен и сохранён: {path}'
 STATUS_MISMATCH = ('{url}: статус {status}, ожидалось {expected}')
 
-
 WHATS_NEW_HEADLINES = ('Ссылка на статью', 'Заголовок', 'Редактор, автор')
 LATEST_VERSIONS_HEADLINES = ('Ссылка на документацию', 'Версия', 'Статус')
 PEP_HEADLINES = ('Статус', 'Количество')
@@ -34,11 +38,6 @@ PEP_FOOTER = 'Всего'
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_soup(session, url):
-    response = get_response(session, url)
-    return response and BeautifulSoup(response.text, 'lxml')
 
 
 def whats_new(session):
@@ -97,9 +96,8 @@ def download(session):
         downloads_url,
         find_tag(soup, 'div', {'role': 'main'}).select_one(
             'table.docutils td > [href$=\'pdf-a4.zip\']')['href'])
-    downloads_dir = DOWNLOADS_DIR
-    downloads_dir.mkdir(exist_ok=True)
-    archive_path = downloads_dir / archive_url.split('/')[-1]
+    archive_path = make_nested_dir(
+        DOWNLOADS_DIR, BASE_DIR) / archive_url.split('/')[-1]
     response = session.get(archive_url)
     with open(archive_path, 'wb') as file:
         file.write(response.content)

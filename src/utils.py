@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 from requests import RequestException
 
 from exceptions import ParserFindTagException
@@ -12,6 +13,12 @@ UNSUCCESSFUL_RESPONSE = (
 TAG_NOT_FOUND = 'Не найден тег {tag} {attrs}'
 
 
+def make_nested_dir(dir_name, base_dir, exist_ok=True):
+    result_dir = base_dir / dir_name
+    result_dir.mkdir(exist_ok=exist_ok)
+    return result_dir
+
+
 def get_response(session, url, encoding='utf-8'):
     try:
         response = session.get(url)
@@ -21,6 +28,11 @@ def get_response(session, url, encoding='utf-8'):
         )
     response.encoding = encoding
     return response
+
+
+def get_soup(session, url):
+    response = get_response(session, url)
+    return response and BeautifulSoup(response.text, 'lxml')
 
 
 def find_tag(soup, tag, attrs=None):
