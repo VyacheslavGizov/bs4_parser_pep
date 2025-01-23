@@ -44,7 +44,7 @@ def file_output(results, cli_args):
     logger.info(SAVED_MESSAGE.format(file_path=file_path))
 
 
-OUTPUT_MODE = {
+OUTPUT_MODES = {
     PRETTY_MODE: pretty_output,
     FILE_MODE: file_output,
     None: default_output
@@ -52,5 +52,4 @@ OUTPUT_MODE = {
 
 
 def control_output(results, cli_args):
-    output = cli_args.output
-    OUTPUT_MODE[output](results, cli_args)
+    OUTPUT_MODES[cli_args.output](results, cli_args)

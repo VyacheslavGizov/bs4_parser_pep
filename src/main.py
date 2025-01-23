@@ -30,6 +30,7 @@ INPUT_ARGS = 'Аргументы командной строки: {args}'
 PARSER_FINISHED = 'Парсер завершил работу.'
 SAVED_MESSAGE = 'Архив был загружен и сохранён: {path}'
 STATUS_MISMATCH = ('{url}: статус {status}, ожидалось {expected}')
+BAD_URL_MESSAGE = 'Сбой при обращении по ссылке {url}: {error}'
 
 WHATS_NEW_HEADLINES = ('Ссылка на статью', 'Заголовок', 'Редактор, автор')
 LATEST_VERSIONS_HEADLINES = ('Ссылка на документацию', 'Версия', 'Статус')
@@ -44,14 +45,17 @@ def whats_new(session):
     results = [WHATS_NEW_HEADLINES]
     whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     soup = get_soup(session, whats_new_url)
-    if soup is None:
-        return
-    sections_by_python = soup.select(
-        '#what-s-new-in-python div.toctree-wrapper li.toctree-l1')
-    for section in tqdm(sections_by_python):
-        version_link = urljoin(whats_new_url, section.find('a')['href'])
-        soup = get_soup(session, version_link)
-        if soup is None:
+    link_tags = soup.select(
+        '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a')
+    for link_tag in tqdm(link_tags):
+        version_link = urljoin(whats_new_url, link_tag['href'])
+        try:
+            soup = get_soup(session, version_link)
+        except ConnectionError as error:
+            logger.warning(BAD_URL_MESSAGE.format(
+                url=version_link,
+                error=error
+            ))
             continue
         results.append((
             version_link,
@@ -64,8 +68,6 @@ def whats_new(session):
 def latest_versions(session):
     results = [LATEST_VERSIONS_HEADLINES]
     soup = get_soup(session, MAIN_DOC_URL)
-    if soup is None:
-        return
     sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
@@ -90,8 +92,6 @@ def latest_versions(session):
 def download(session):
     downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
     soup = get_soup(session, downloads_url)
-    if soup is None:
-        return
     archive_url = urljoin(
         downloads_url,
         find_tag(soup, 'div', {'role': 'main'}).select_one(
@@ -101,12 +101,16 @@ def download(session):
     response = session.get(archive_url)
     with open(archive_path, 'wb') as file:
         file.write(response.content)
-    logging.info(SAVED_MESSAGE.format(path=archive_path))
+    logger.info(SAVED_MESSAGE.format(path=archive_path))
 
 
 def find_statuses_and_links(session):
-    soup = get_soup(session, PEP_URL)
-    return soup and [
+    try:
+        soup = get_soup(session, PEP_URL)
+    except ConnectionError as error:
+        logger.warning(BAD_URL_MESSAGE.format(url=PEP_URL, error=error))
+        return []
+    return [
         {
             'status_preview': find_tag(row, tag='abbr').text[1:],
             'link': find_tag(row, tag='a')['href']
@@ -119,25 +123,28 @@ def find_statuses_and_links(session):
 
 def check_status(session, status_preview, url):
     soup = get_soup(session, url)
-    if soup is None:
-        return
     status = soup.find(string='Status').parent.find_next_sibling().text
     expected = EXPECTED_STATUS[status_preview]
-    if status not in expected:
-        logger.info(STATUS_MISMATCH.format(
-            url=url, status=status, expected=expected))
-    return status
+    if status in expected:
+        return status, None
+    return status, STATUS_MISMATCH.format(url=url, status=status,
+                                          expected=expected)
 
 
 def pep(session):
     quantity_per_status = defaultdict(int)
+    messages = []
     for result in tqdm(find_statuses_and_links(session)):
-        status = check_status(
+        status, message = check_status(
             session=session,
             status_preview=result['status_preview'],
             url=urljoin(PEP_URL, result['link'])
         )
         quantity_per_status[status] += 1
+        if message:
+            messages.append(message)
+    for message in messages:
+        logger.info(message)
     return [
         PEP_HEADLINES,
         *quantity_per_status.items(),

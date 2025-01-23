@@ -7,6 +7,7 @@ from exceptions import ParserFindTagException
 REQUEST_ERROR = ('Сбой сети! При выполнении GET-запроса на {url} возникла '
                  'ошибка: {error}.')
 TAG_NOT_FOUND = 'Не найден тег {tag} {attrs}'
+BAD_URL_MESSAGE = 'Сбой при обращении по ссылке {url}: {error}'
 
 
 def make_nested_dir(dir_name, base_dir, exist_ok=True):
@@ -27,8 +28,7 @@ def get_response(session, url, encoding='utf-8'):
 
 
 def get_soup(session, url):
-    response = get_response(session, url)
-    return response and BeautifulSoup(response.text, 'lxml')
+    return BeautifulSoup(get_response(session, url).text, 'lxml')
 
 
 def find_tag(soup, tag, attrs=None):
