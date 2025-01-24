@@ -16,7 +16,14 @@ from constants import (
 )
 from exceptions import ParserNotFindException
 from outputs import control_output
-from utils import get_soup, find_tag, make_nested_dir
+from utils import (
+    INFO,
+    WARNING,
+    find_tag,
+    get_soup,
+    logging_records,
+    make_nested_dir,
+)
 
 
 # Сообщения исключений
@@ -47,14 +54,15 @@ def whats_new(session):
     soup = get_soup(session, whats_new_url)
     link_tags = soup.select(
         '#what-s-new-in-python div.toctree-wrapper li.toctree-l1 > a')
+    log_records = []
     for link_tag in tqdm(link_tags):
         version_link = urljoin(whats_new_url, link_tag['href'])
         try:
             soup = get_soup(session, version_link)
         except ConnectionError as error:
-            logger.warning(BAD_URL_MESSAGE.format(
+            log_records.append(BAD_URL_MESSAGE.format(
                 url=version_link,
-                error=error
+                error=error,
             ))
             continue
         results.append((
@@ -62,6 +70,7 @@ def whats_new(session):
             find_tag(soup, 'h1').text,
             find_tag(soup, 'dl').text.replace('\n', ' ')
         ))
+    logging_records(logger, WARNING, log_records)
     return results
 
 
@@ -104,13 +113,14 @@ def download(session):
     logger.info(SAVED_MESSAGE.format(path=archive_path))
 
 
-def find_statuses_and_links(session):
-    try:
-        soup = get_soup(session, PEP_URL)
-    except ConnectionError as error:
-        logger.warning(BAD_URL_MESSAGE.format(url=PEP_URL, error=error))
-        return []
-    return [
+def pep(session):
+    records_by_levels = {
+        WARNING: [],
+        INFO: []
+    }
+    quantity_per_status = defaultdict(int)
+    soup = get_soup(session, PEP_URL)
+    pep_attrs = [
         {
             'status_preview': find_tag(row, tag='abbr').text[1:],
             'link': find_tag(row, tag='a')['href']
@@ -119,32 +129,28 @@ def find_statuses_and_links(session):
             soup, 'section', {'id': 'index-by-category'}).find_all('tbody')
         for row in table.find_all('tr')
     ]
-
-
-def check_status(session, status_preview, url):
-    soup = get_soup(session, url)
-    status = soup.find(string='Status').parent.find_next_sibling().text
-    expected = EXPECTED_STATUS[status_preview]
-    if status in expected:
-        return status, None
-    return status, STATUS_MISMATCH.format(url=url, status=status,
-                                          expected=expected)
-
-
-def pep(session):
-    quantity_per_status = defaultdict(int)
-    messages = []
-    for result in tqdm(find_statuses_and_links(session)):
-        status, message = check_status(
-            session=session,
-            status_preview=result['status_preview'],
-            url=urljoin(PEP_URL, result['link'])
-        )
+    for pep_attr in tqdm(pep_attrs):
+        url = urljoin(PEP_URL, pep_attr['link'])
+        try:
+            soup = get_soup(session, url)
+        except ConnectionError as error:
+            records_by_levels[WARNING].append(BAD_URL_MESSAGE.format(
+                url=url,
+                error=error,
+            ))
+            continue
+        status = soup.find(string='Status').parent.find_next_sibling().text
+        expected = EXPECTED_STATUS[pep_attr['status_preview']]
+        if status not in expected:
+            records_by_levels[INFO].append(STATUS_MISMATCH.format(
+                url=url,
+                status=status,
+                expected=expected
+            ))
         quantity_per_status[status] += 1
-        if message:
-            messages.append(message)
-    for message in messages:
-        logger.info(message)
+    for level, records in records_by_levels.items():
+        if records:
+            logging_records(logger, level, records)
     return [
         PEP_HEADLINES,
         *quantity_per_status.items(),

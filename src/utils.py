@@ -7,7 +7,18 @@ from exceptions import ParserFindTagException
 REQUEST_ERROR = ('Сбой сети! При выполнении GET-запроса на {url} возникла '
                  'ошибка: {error}.')
 TAG_NOT_FOUND = 'Не найден тег {tag} {attrs}'
-BAD_URL_MESSAGE = 'Сбой при обращении по ссылке {url}: {error}'
+
+WARNING = 'warning'
+INFO = 'info'
+
+
+def logging_records(logger, lewel, log_records):
+    LOG_LEVELS = {
+        WARNING: logger.warning,
+        INFO: logger.info,
+    }
+    for record in log_records:
+        LOG_LEVELS[lewel](record)
 
 
 def make_nested_dir(dir_name, base_dir, exist_ok=True):
