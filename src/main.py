@@ -17,11 +17,8 @@ from constants import (
 from exceptions import ParserNotFindException
 from outputs import control_output
 from utils import (
-    INFO,
-    WARNING,
     find_tag,
     get_soup,
-    logging_records,
     make_nested_dir,
 )
 
@@ -43,6 +40,9 @@ WHATS_NEW_HEADLINES = ('Ссылка на статью', 'Заголовок', '
 LATEST_VERSIONS_HEADLINES = ('Ссылка на документацию', 'Версия', 'Статус')
 PEP_HEADLINES = ('Статус', 'Количество')
 PEP_FOOTER = 'Всего'
+
+WARNING = 'warning'
+INFO = 'info'
 
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ def whats_new(session):
             find_tag(soup, 'h1').text,
             find_tag(soup, 'dl').text.replace('\n', ' ')
         ))
-    logging_records(logger, WARNING, log_records)
+    list(map(logger.warning, log_records))
     return results
 
 
@@ -148,9 +148,8 @@ def pep(session):
                 expected=expected
             ))
         quantity_per_status[status] += 1
-    for level, records in records_by_levels.items():
-        if records:
-            logging_records(logger, level, records)
+    list(map(logger.warning, records_by_levels[WARNING]))
+    list(map(logger.info, records_by_levels[INFO]))
     return [
         PEP_HEADLINES,
         *quantity_per_status.items(),

@@ -8,18 +8,6 @@ REQUEST_ERROR = ('Сбой сети! При выполнении GET-запро�
                  'ошибка: {error}.')
 TAG_NOT_FOUND = 'Не найден тег {tag} {attrs}'
 
-WARNING = 'warning'
-INFO = 'info'
-
-
-def logging_records(logger, lewel, log_records):
-    LOG_LEVELS = {
-        WARNING: logger.warning,
-        INFO: logger.info,
-    }
-    for record in log_records:
-        LOG_LEVELS[lewel](record)
-
 
 def make_nested_dir(dir_name, base_dir, exist_ok=True):
     result_dir = base_dir / dir_name
